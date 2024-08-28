@@ -6,14 +6,14 @@ import { createSystemCalls } from "../createSystemCalls";
 import { defineContractComponents } from "./contractComponents";
 import { world } from "./world";
 import { setupWorld } from "./generated";
-import { Account, WeierstrassSignatureType } from "starknet";
+import { Account, ArraySignatureType } from "starknet";
 import { BurnerManager } from "@dojoengine/create-burner";
 
 export type SetupResult = Awaited<ReturnType<typeof setup>>;
 
 export async function setup({ ...config }: DojoConfig) {
   // torii client
-  const toriiClient = await torii.createClient([], {
+  const toriiClient = await torii.createClient({
     rpcUrl: config.rpcUrl,
     toriiUrl: config.toriiUrl,
     relayUrl: "",
@@ -62,19 +62,13 @@ export async function setup({ ...config }: DojoConfig) {
     client,
     clientComponents,
     contractComponents,
-    systemCalls: createSystemCalls(
-      { client },
-      contractComponents,
-      clientComponents,
-    ),
-    publish: (typedData: string, signature: WeierstrassSignatureType) => {
-      toriiClient.publishMessage(typedData, {
-        r: signature.r.toString(),
-        s: signature.s.toString(),
-      });
+    systemCalls: createSystemCalls({ client }, clientComponents),
+    publish: (typedData: string, signature: ArraySignatureType) => {
+      toriiClient.publishMessage(typedData, signature);
     },
     config,
     dojoProvider,
     burnerManager,
+    toriiClient,
   };
 }

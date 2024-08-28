@@ -4,9 +4,10 @@ import { setup } from "./dojo/generated/setup.ts";
 import { DojoProvider } from "./dojo/DojoContext.tsx";
 import { dojoConfig } from "../dojoConfig.ts";
 import { ApolloProvider } from '@apollo/client';
-import appoloClient from "./lib/appolo-client.ts";
 import { useEffect, useState } from "react";
 import CreateLoaderSVG from "./components/ui/svgs/create-loader.tsx";
+import apollo_client from "./lib/apollo-client.ts";
+import { Toaster } from "./components/ui/toaster.tsx";
 
 export default function AppWrapper() {
   const [setupResult, setSetupResult] = useState<any>(null)
@@ -25,7 +26,7 @@ export default function AppWrapper() {
   }, [])
 
   if (loading || (!error && !setupResult)) return (
-    <div className="w-full h-screen grid place-items-center bg-primary">
+    <div className="grid w-full h-screen place-items-center bg-primary">
       <div
         className="flex flex-row items-center justify-center space-x-1">
         <CreateLoaderSVG />
@@ -37,9 +38,10 @@ export default function AppWrapper() {
   if (error) throw error;
 
   return (
-    <ApolloProvider client={appoloClient}>
+    <ApolloProvider client={apollo_client}>
       <DojoProvider value={setupResult}>
         <App />
+        <Toaster />
       </DojoProvider>
     </ApolloProvider>
   )

@@ -1,7 +1,7 @@
-use core::starknet::ContractAddress;
+use starknet::ContractAddress;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use mancala::models::{mancala_game::{MancalaGame, GameStatus}};
-use mancala::models::player::{GamePlayer, GamePlayerTrait, Player};
+use mancala::models::player::{GamePlayer, GamePlayerTrait};
 
 #[dojo::interface]
 trait IActions {
@@ -17,10 +17,10 @@ trait IActions {
     fn time_out(ref world: IWorldDispatcher, game_id: u128);
     fn get_score(ref world: IWorldDispatcher, game_id: u128) -> (u8, u8);
     fn is_game_finished(ref world: IWorldDispatcher, game_id: u128) -> bool;
-    fn initialize_player(ref world: IWorldDispatcher, player_address: ContractAddress);
-    fn get_player_history(
-        world: @IWorldDispatcher, player_address: ContractAddress
-    ) -> (Array<u128>, Array<u128>);
+    //fn initialize_player(ref world: IWorldDispatcher, player_address: ContractAddress);
+    //fn get_player_history(
+    //    world: @IWorldDispatcher, player_address: ContractAddress
+    //) -> (Array<u128>, Array<u128>);
     fn forfeited(ref world: IWorldDispatcher, game_id: u128, player_address: ContractAddress);
     fn request_restart_game(ref world: IWorldDispatcher, game_id: u128);
     fn restart_game(ref world: IWorldDispatcher, game_id: u128, private: bool) -> MancalaGame;
@@ -28,11 +28,10 @@ trait IActions {
 
 #[dojo::contract]
 mod actions {
-    use core::starknet::{ContractAddress, get_caller_address, SyscallResultTrait};
-    use core::starknet::contract_address::ContractAddressZeroable;
-    use core::starknet::info::get_execution_info_syscall;
+    use starknet::{ContractAddress, get_caller_address, SyscallResultTrait};
+    use starknet::{get_tx_info, get_block_number};
     use mancala::models::{mancala_game::{MancalaGame, MancalaGameTrait, GameId, GameStatus}};
-    use mancala::models::{player::{GamePlayer, GamePlayerTrait, Player}};
+    use mancala::models::{player::{GamePlayer, GamePlayerTrait}};
     use super::IActions;
 
     #[abi(embed_v0)]
@@ -63,7 +62,7 @@ mod actions {
         ) {
             let mut mancala_game = get!(world, game_id, (MancalaGame));
             assert!(
-                mancala_game.player_two == ContractAddressZeroable::zero(), "player_2 already set"
+                mancala_game.player_two == core::num::traits::Zero::<ContractAddress>::zero(), "player_2 already set"
             );
             let player_two = GamePlayerTrait::new(mancala_game.game_id, player_two_address);
             mancala_game.join_game(player_two);
@@ -94,7 +93,7 @@ mod actions {
 
             assert!(mancala_game.status == GameStatus::InProgress, "Game is not in progress");
             assert!(
-                mancala_game.player_two != ContractAddressZeroable::zero(),
+                mancala_game.player_two != core::num::traits::Zero::<ContractAddress>::zero(),
                 "Player two not yet set."
             );
 
@@ -117,10 +116,9 @@ mod actions {
                     mancala_game.final_capture(ref current_player, ref opponent);
                     mancala_game.set_winner(current_player, opponent);
                     set!(world, (mancala_game, current_player, opponent));
-
                     // Call finish_game to update player records
-                    let (loser, winner) = mancala_game.finish_game(world, game_id);
-                    set!(world, (loser, winner));
+                    //let (loser, winner) = mancala_game.finish_game(world, game_id);
+                    //set!(world, (loser, winner));
                     (mancala_game.current_player, mancala_game.status)
                 } else {
                     set!(world, (mancala_game, current_player, opponent));
@@ -137,10 +135,9 @@ mod actions {
             assert!(mancala_game.status == GameStatus::InProgress, "Game is not in progress");
 
             let (_, mut opponent) = mancala_game.get_players(world);
-            let execution_info = get_execution_info_syscall().unwrap_syscall().unbox();
-            let block_info = execution_info.block_info.unbox();
+            let block_number = get_block_number();
             assert!(
-                block_info.block_number >= mancala_game.last_move + mancala_game.time_between_move,
+                block_number >= mancala_game.last_move + mancala_game.time_between_move,
                 "Game is in progress"
             );
 
@@ -148,10 +145,10 @@ mod actions {
             mancala_game.winner = opponent.address;
 
             set!(world, (mancala_game));
-            // Call finish_game to update player records
-            mancala_game.finish_game(world, game_id);
-            let (loser, winner) = mancala_game.finish_game(world, game_id);
-            set!(world, (loser, winner));
+        // Call finish_game to update player records
+        //mancala_game.finish_game(world, game_id);
+        //let (loser, winner) = mancala_game.finish_game(world, game_id);
+        //set!(world, (loser, winner));
         }
 
         fn get_score(ref world: IWorldDispatcher, game_id: u128) -> (u8, u8) {
@@ -177,19 +174,19 @@ mod actions {
         }
 
 
-        fn initialize_player(ref world: IWorldDispatcher, player_address: ContractAddress) {
-            let player = Player {
-                address: player_address, games_won: ArrayTrait::new(), games_lost: ArrayTrait::new()
-            };
-            set!(world, (player));
-        }
+        //fn initialize_player(ref world: IWorldDispatcher, player_address: ContractAddress) {
+        //    let player = Player {
+        //        address: player_address, games_won: ArrayTrait::new(), games_lost: ArrayTrait::new()
+        //    };
+        //    set!(world, (player));
+        //}
 
-        fn get_player_history(
-            world: @IWorldDispatcher, player_address: ContractAddress
-        ) -> (Array<u128>, Array<u128>) {
-            let player = get!(world, player_address, (Player));
-            (player.games_won, player.games_lost)
-        }
+        //fn get_player_history(
+        //    world: @IWorldDispatcher, player_address: ContractAddress
+        //) -> (Array<u128>, Array<u128>) {
+        //    let player = get!(world, player_address, (Player));
+        //    (player.games_won, player.games_lost)
+        //}
 
         // todo this function is not a production ready function
         // the player_address should not be passed. The current caller should be used
@@ -231,7 +228,7 @@ mod actions {
             );
 
             assert(player_one_info.restart_requested == true, 'player one did not restart');
-            if (player_two_info.address != ContractAddressZeroable::zero()) {
+            if (player_two_info.address != core::num::traits::Zero::<ContractAddress>::zero()) {
                 assert(player_two_info.restart_requested == true, 'player two did not restart');
             }
 
@@ -249,4 +246,3 @@ mod actions {
         }
     }
 }
-

@@ -1,37 +1,18 @@
 [package]
-cairo-version = "2.6.3"
+cairo-version = "=2.7.0"
 name = "mancala"
-version = "0.7.0"
+version = "0.0.3"
+edition = "2024_07"
 
 [cairo]
 sierra-replace-ids = true
 
 [scripts]
-migrate = "sozo build && sozo migrate plan && sozo migrate apply && ./scripts/default_auth.sh"
+migrate = "sozo build && sozo migrate plan && sozo migrate apply"
 
 [dependencies]
-dojo = { git = "https://github.com/dojoengine/dojo", tag = "v0.7.3" }
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v1.0.0-alpha.6" }
 
 [[target.dojo]]
 
-[tool.dojo]
-initializer_class_hash = "0xOkhai"
-
-[tool.dojo.env]
-rpc_url = "https://api.cartridge.gg/x/mancala/katana"
-# Default account for katana with seed = 0
-account_address = "0x70db2adccadd984b16676dec668d39d3fac9e65fd368222c0d47e234fdde7d4"
-private_key = "0x6f9c267cbd5825905828c4dc06edf348768a157176d10ca2a98770064f5c648"
-world_address = "0x04404b47fc2a4251f05e5013fc77250c0d8de65c03b7d48893016ee751327e9e"  # Update this line with your world address
-
-[tool.dojo.world]
-name = "Mancala"
-description = "Mancala is a classic strategy board game reimagined as a decentralized, on-chain experience."
-cover_uri = "file://assets/cover.png"
-icon_uri = "file://assets/icon.png"
-website = "https://www.realmofra.com/"
-
-[tool.dojo.world.socials]
-x = "https://x.com/realm_of_ra"
-github = "https://github.com/realm-of-ra/mancala"
-telegram = "https://t.me/+0UKU3P3Eh_s2NTRh"
+[profile.sepolia]
